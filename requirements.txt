@@ -7,3 +7,4 @@ passlib[bcrypt]
 python-jose
 bcrypt
 gunicorn
+psycopg2-binary
