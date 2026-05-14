@@ -2,5 +2,8 @@ fastapi
 uvicorn
 python-dotenv
 google-generativeai
-gunicorn
 sqlalchemy
+passlib[bcrypt]
+python-jose
+bcrypt
+gunicorn
