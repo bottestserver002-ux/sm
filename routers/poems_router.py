@@ -32,3 +32,36 @@ def add_poem(data: dict, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Thêm bài thơ thành công"}
+s
+# UPDATE POEM
+@router.put("/poems/{id}")
+def update_poem(id: int, data: dict, db: Session = Depends(get_db)):
+
+    poem = db.query(Poem).filter(Poem.id == id).first()
+
+    if not poem:
+        raise HTTPException(status_code=404, detail="Không tìm thấy bài thơ")
+
+    poem.title = data["title"]
+    poem.content = data["content"]
+    poem.category = data["category"]
+
+    db.commit()
+
+    return {"message": "Cập nhật thành công"}
+
+
+# DELETE POEM
+@router.delete("/poems/{id}")
+def delete_poem(id: int, db: Session = Depends(get_db)):
+
+    poem = db.query(Poem).filter(Poem.id == id).first()
+
+    if not poem:
+        raise HTTPException(status_code=404, detail="Không tìm thấy bài thơ")
+
+    db.delete(poem)
+
+    db.commit()
+
+    return {"message": "Xóa thành công"}
