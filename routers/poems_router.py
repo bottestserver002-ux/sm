@@ -32,7 +32,7 @@ def add_poem(data: dict, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Thêm bài thơ thành công"}
-s
+
 # UPDATE POEM
 @router.put("/poems/{id}")
 def update_poem(id: int, data: dict, db: Session = Depends(get_db)):
