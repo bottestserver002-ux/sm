@@ -1,3 +1,4 @@
+from schemas import RegisterSchema, LoginSchema
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -9,46 +10,47 @@ router = APIRouter()
 
 
 @router.post("/register")
-def register(data: dict, db: Session = Depends(get_db)):
+def register(data: RegisterSchema, db: Session = Depends(get_db)):
 
-    user = db.query(User).filter(User.email == data["email"]).first()
+    user = db.query(User).filter(User.email == data.email).first()
 
     if user:
         raise HTTPException(400, "Email đã tồn tại")
 
     new_user = User(
-        username=data["username"],
-        email=data["email"],
-        password=hash_password(data["password"]),
+        username=data.username,
+        email=data.email,
+        password=hash_password(data.password),
         is_admin=False
     )
 
     db.add(new_user)
     db.commit()
+    db.refresh(new_user)
 
     return {"message": "Đăng ký thành công"}
 
 
 @router.post("/login")
-def login(data: dict, db: Session = Depends(get_db)):
+def login(data: LoginSchema, db: Session = Depends(get_db)):
 
-    user = db.query(User).filter(User.email == data["email"]).first()
+    user = db.query(User).filter(User.email == data.email).first()
 
-    if not user:
-        raise HTTPException(400, "Sai tài khoản")
-
-    if not verify_password(data["password"], user.password):
-        raise HTTPException(400, "Sai mật khẩu")
+    if not user or not verify_password(data.password, user.password):
+        raise HTTPException(400, "Email hoặc mật khẩu không đúng")
 
     token = create_access_token({
         "id": user.id,
         "email": user.email,
+        "username": user.username,
         "is_admin": user.is_admin
     })
 
     return {
-         "token": token,
-    "is_admin": user.is_admin,
-    "username": user.username,
-    "email": user.email
+        "token": token,
+        "user": {
+            "username": user.username,
+            "email": user.email,
+            "is_admin": user.is_admin
+        }
     }
