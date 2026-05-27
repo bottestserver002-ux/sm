@@ -33,3 +33,12 @@ class Post(Base):
     image = Column(String)
 
     content = Column(Text)
+
+class Question(Base):
+    __tablename__ = "questions"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    image = Column(Text, nullable=False)
+
+    answer = Column(String(100), nullable=False)

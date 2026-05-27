@@ -7,6 +7,10 @@ from routers.auth_router import router as auth_router
 from routers.poems_router import router as poems_router
 from routers.posts_router import router as posts_router
 from routers.ai_router import router as ai_router
+from routers import router as minigame_router
+from models import Question
+from schemas import QuestionCreate
+import random
 
 Base.metadata.create_all(bind=engine)
 
@@ -24,3 +28,4 @@ app.include_router(auth_router)
 app.include_router(poems_router)
 app.include_router(posts_router)
 app.include_router(ai_router)
+app.include_router(minigame_router.router)
