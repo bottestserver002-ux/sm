@@ -58,8 +58,17 @@ def add_question(
     db: Session = Depends(get_db)
 ):
 
+    image = data["image"]
+
+    # AUTO CONVERT GOOGLE DRIVE
+    if "drive.google.com/file/d/" in image:
+
+        file_id = image.split("/d/")[1].split("/")[0]
+
+        image = f"https://drive.google.com/uc?export=view&id={file_id}"
+
     new_question = Question(
-        image=data["image"],
+        image=image,
         answer=data["answer"]
     )
 
