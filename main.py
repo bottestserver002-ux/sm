@@ -10,6 +10,8 @@ from routers.posts_router import router as posts_router
 from routers.ai_router import router as ai_router
 from routers.minigame_router import router as minigame_router
 
+import os
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -21,6 +23,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+os.makedirs(
+    "uploads",
+    exist_ok=True
 )
 
 app.mount(
