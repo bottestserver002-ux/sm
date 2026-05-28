@@ -1,4 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import (
+    APIRouter,
+    Depends,
+    UploadFile,
+    File,
+    Form
+)
+
+import shutil
+import uuid
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -54,22 +63,32 @@ def get_questions(
 
 @router.post("/minigame")
 def add_question(
-    data: dict,
+    answer: str = Form(...),
+    image: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
 
-    image = data["image"]
+    filename = (
+        str(uuid.uuid4())
+        + image.filename
+    )
 
-    # AUTO CONVERT GOOGLE DRIVE
-    if "drive.google.com/file/d/" in image:
+    filepath = f"uploads/{filename}"
 
-        file_id = image.split("/d/")[1].split("/")[0]
+    with open(filepath, "wb") as buffer:
 
-        image = f"https://drive.google.com/uc?export=view&id={file_id}"
+        shutil.copyfileobj(
+            image.file,
+            buffer
+        )
+
+    image_url = (
+        f"https://sm-backend-hbpp.onrender.com/uploads/{filename}"
+    )
 
     new_question = Question(
-        image=image,
-        answer=data["answer"]
+        image=image_url,
+        answer=answer
     )
 
     db.add(new_question)
@@ -77,7 +96,7 @@ def add_question(
     db.commit()
 
     return {
-        "message": "Thêm câu hỏi thành công"
+        "message": "Thêm thành công"
     }
 
 
