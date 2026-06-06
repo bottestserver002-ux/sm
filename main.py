@@ -9,6 +9,9 @@ from routers.poems_router import router as poems_router
 from routers.posts_router import router as posts_router
 from routers.ai_router import router as ai_router
 from routers.minigame_router import router as minigame_router
+from database import engine
+from models import *
+
 
 import os
 

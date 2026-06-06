@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime
 from database import Base
 
 
@@ -42,3 +42,28 @@ class Question(Base):
     image = Column(Text, nullable=False)
 
     answer = Column(String(100), nullable=False)
+
+class OTPCode(Base):
+
+    __tablename__ = "otp_codes"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    email = Column(
+        String,
+        nullable=False
+    )
+
+    otp = Column(
+        String,
+        nullable=False
+    )
+
+    expires_at = Column(
+        DateTime,
+        nullable=False
+    )
