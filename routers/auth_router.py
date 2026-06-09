@@ -128,7 +128,7 @@ def send_otp(data: dict, db: Session = Depends(get_db)):
 
     html = f"""
     <div style="background:#2563eb; color:white; padding:20px; text-align:center;">
-        <h1>Website Cá Nhân</h1>
+        <h1>WEBSITE BY MANH TRUONG</h1>
     </div>
 
     <div style="padding:30px;">
@@ -161,7 +161,7 @@ def send_otp(data: dict, db: Session = Depends(get_db)):
         text-align:center;
         color:#666;
     ">
-        © 2026 Website Cá Nhân
+        © 2026 WEBSITE BY MANH TRUONG. All rights reserved.
     </div>
     """
 
