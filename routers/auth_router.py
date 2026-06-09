@@ -186,3 +186,100 @@ def send_otp(data: dict, db: Session = Depends(get_db)):
             status_code=500,
             detail=f"Lỗi gửi email: {str(e)}"
         )
+    
+
+@router.post("/forgot-password")
+def forgot_password(data: dict,
+                    db: Session = Depends(get_db)):
+
+    email = data["email"]
+
+    user = db.query(User).filter(
+        User.email == email
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Email không tồn tại"
+        )
+
+    otp = str(random.randint(100000, 999999))
+
+    expire = datetime.utcnow() + timedelta(minutes=3)
+
+    db.add(
+        OTPCode(
+            email=email,
+            otp=otp,
+            expires_at=expire
+        )
+    )
+
+    db.commit()
+
+    resend.Emails.send({
+        "from": "WEBSITE BY MANH TRUONG <no-reply@manhtruong6723.id.vn>",
+        "to": email,
+        "subject": "Đặt lại mật khẩu",
+        "html": f"""
+        <h2>Đặt lại mật khẩu</h2>
+        <p>Mã OTP của bạn:</p>
+        <h1>{otp}</h1>
+        <p>Hiệu lực trong 3 phút</p>
+        """
+    })
+
+    return {
+        "message": "OTP đã gửi"
+    }
+
+@router.post("/reset-password")
+def reset_password(data: dict,
+                   db: Session = Depends(get_db)):
+
+    email = data["email"]
+    otp = data["otp"]
+    new_password = data["password"]
+
+    otp_record = db.query(OTPCode).filter(
+        OTPCode.email == email,
+        OTPCode.otp == otp
+    ).order_by(
+        OTPCode.id.desc()
+    ).first()
+
+    if not otp_record:
+        raise HTTPException(
+            status_code=400,
+            detail="OTP không đúng"
+        )
+
+    if otp_record.expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=400,
+            detail="OTP đã hết hạn"
+        )
+
+    user = db.query(User).filter(
+        User.email == email
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Không tìm thấy tài khoản"
+        )
+
+    user.password = hash_password(
+        new_password
+    )
+
+    db.commit()
+
+    db.delete(otp_record)
+    db.commit()
+
+    return {
+        "message": "Đổi mật khẩu thành công"
+    }
