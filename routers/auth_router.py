@@ -4,20 +4,20 @@ from schemas import RegisterSchema, LoginSchema
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session  
 from datetime import datetime, timedelta
-import smtplib
 import random
 import os
 
-from email.mime.text import MIMEText
 from models import User, OTPCode
 
 from database import get_db
 from models import User
 from auth import hash_password, verify_password, create_access_token
+import resend
 
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+resend.api_key = RESEND_API_KEY
 router = APIRouter()
-MAIL_USER = os.getenv("MAIL_USER")
-MAIL_PASS = os.getenv("MAIL_PASS") 
+
 
 
 @router.post("/register")
@@ -40,9 +40,17 @@ def register(data: dict,
         return {
             "message": "OTP đã hết hạn"
         }
+ # kiểm tra email đã tồn tại chưa
+    existing = db.query(User).filter(
+    User.email == data["email"]
+    ).first()
 
+    if existing:
+        raise HTTPException(
+           status_code=400,
+           detail="Email đã tồn tại"
+    )
     # tạo user
-
     user = User(
         username=data["username"],
         email=data["email"],
@@ -119,11 +127,6 @@ def send_otp(data: dict, db: Session = Depends(get_db)):
     db.commit()
 
     html = f"""
-<html>
-<body style="font-family: Arial, sans-serif; background:#f4f4f4; padding:20px;">
-
-<div style="max-width:600px; margin:auto; background:white; border-radius:12px; overflow:hidden;">
-
     <div style="background:#2563eb; color:white; padding:20px; text-align:center;">
         <h1>Website Cá Nhân</h1>
     </div>
@@ -160,37 +163,26 @@ def send_otp(data: dict, db: Session = Depends(get_db)):
     ">
         © 2026 Website Cá Nhân
     </div>
+    """
 
-</div>
+    try:
 
-</body>
-</html>
-"""
+        resend.Emails.send({
+            "from": "Website Cá Nhân <no-reply@manhtruong6723.id.vn>",
+            "to": email,
+            "subject": "Mã xác nhận đăng ký",
+            "html": html
+        })
 
-    msg = MIMEText(html, "html", "utf-8")
+        return {
+            "message": "Đã gửi OTP"
+        }
 
-    msg["Subject"] = "Mã xác nhận đăng ký"
+    except Exception as e:
 
-    msg["From"] = MAIL_USER
+        print("RESEND ERROR:", str(e))
 
-    msg["To"] = email
-
-    server = smtplib.SMTP(
-        "smtp.gmail.com",
-        587
-    )
-
-    server.starttls()
-
-    server.login(
-        MAIL_USER,
-        MAIL_PASS
-    )
-
-    server.send_message(msg)
-
-    server.quit()
-
-    return {
-        "message": "Đã gửi OTP"
-    }
+        raise HTTPException(
+            status_code=500,
+            detail=f"Lỗi gửi email: {str(e)}"
+        )

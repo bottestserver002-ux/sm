@@ -83,3 +83,4 @@ websocket-client==1.8.0
 websockets==16.0
 wsproto==1.2.0
 python-multipart==0.0.20
+resend==0.3.0
