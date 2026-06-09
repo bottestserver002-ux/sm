@@ -168,7 +168,7 @@ def send_otp(data: dict, db: Session = Depends(get_db)):
     try:
 
         resend.Emails.send({
-            "from": "Website Cá Nhân <no-reply@manhtruong6723.id.vn>",
+            "from": "WEBSITE BY MANH TRUONG <no-reply@manhtruong6723.id.vn>",
             "to": email,
             "subject": "Mã xác nhận đăng ký",
             "html": html
