@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+import shutil
 from sqlalchemy.orm import Session
 from database import get_db
 from models import FoodItem
@@ -6,7 +7,8 @@ import resend
 import os
 
 router = APIRouter()
-
+UPLOAD_DIR = "uploads/foods"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 ADMIN_EMAIL = "bottestserver002@gmail.com"
 
 @router.get("/foods")
@@ -14,63 +16,73 @@ def get_foods(db: Session = Depends(get_db)):
     foods = db.query(FoodItem).order_by(FoodItem.name.asc()).all()
 
     return [
-        {
-            "id": f.id,
-            "name": f.name,
-            "category": f.category
-        }
-        for f in foods
-    ]
+    {
+        "id": f.id,
+        "name": f.name,
+        "category": f.category,
+        "image": f.image
+    }
+    for f in foods
+]
 
 
 @router.post("/foods")
-def add_food(data: dict, db: Session = Depends(get_db)):
+def add_food(
+    name: str = Form(...),
+    category: str = Form(...),
+    image: UploadFile = File(None),
+    db: Session = Depends(get_db)
+):
+    image_path = None
+
+    if image:
+        file_path = f"{UPLOAD_DIR}/{image.filename}"
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+
+        image_path = f"/{file_path}"
+
     food = FoodItem(
-        name=data["name"],
-        category=data["category"]
+        name=name,
+        category=category,
+        image=image_path
     )
 
     db.add(food)
     db.commit()
     db.refresh(food)
 
-    return {
-        "message": "Đã thêm món",
-        "food": {
-            "id": food.id,
-            "name": food.name,
-            "category": food.category
-        }
-    }
+    return {"message": "Đã thêm món"}
 
 
 @router.put("/foods/{food_id}")
-def update_food(food_id: int, data: dict, db: Session = Depends(get_db)):
+def update_food(
+    food_id: int,
+    name: str = Form(...),
+    category: str = Form(...),
+    image: UploadFile = File(None),
+    db: Session = Depends(get_db)
+):
     food = db.query(FoodItem).filter(FoodItem.id == food_id).first()
 
     if not food:
         raise HTTPException(status_code=404, detail="Không tìm thấy món")
 
-    food.name = data["name"]
-    food.category = data["category"]
+    food.name = name
+    food.category = category
+
+    if image:
+        file_path = f"{UPLOAD_DIR}/{image.filename}"
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+
+        food.image = f"/{file_path}"
 
     db.commit()
 
     return {"message": "Đã cập nhật món"}
-
-
-@router.delete("/foods/{food_id}")
-def delete_food(food_id: int, db: Session = Depends(get_db)):
-    food = db.query(FoodItem).filter(FoodItem.id == food_id).first()
-
-    if not food:
-        raise HTTPException(status_code=404, detail="Không tìm thấy món")
-
-    db.delete(food)
-    db.commit()
-
-    return {"message": "Đã xóa món"}
-
 
 @router.post("/foods/order")
 def order_food(data: dict):

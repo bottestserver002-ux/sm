@@ -75,3 +75,4 @@ class FoodItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     category = Column(String, nullable=False)
+    image = Column(String, nullable=True)
