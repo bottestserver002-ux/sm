@@ -60,7 +60,7 @@ def register(data: dict,
     )
 
     db.add(user)
-
+    db.delete(otp_record)
     db.commit()
 
     return {
@@ -80,7 +80,8 @@ def login(data: LoginSchema, db: Session = Depends(get_db)):
         "id": user.id,
         "email": user.email,
         "username": user.username,
-        "is_admin": user.is_admin
+        "is_admin": user.is_admin,
+        "is_family": user.is_family
     })
 
     return {
@@ -88,7 +89,8 @@ def login(data: LoginSchema, db: Session = Depends(get_db)):
         "user": {
             "username": user.username,
             "email": user.email,
-            "is_admin": user.is_admin
+            "is_admin": user.is_admin,
+            "is_family": user.is_family
         }
     }
 @router.get("/make-admin")
@@ -106,6 +108,22 @@ def make_admin(db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Admin updated"}
+
+@router.get("/make-family")
+def make_family(db: Session = Depends(get_db)):
+
+    user = db.query(User).filter(
+        User.email == "bottestserver004@gmail.com"
+    ).first()
+
+    if not user:
+        return {"error": "User not found"}
+
+    user.is_family = True
+
+    db.commit()
+
+    return {"message": "Family updated"}
 
 @router.post("/send-otp")
 def send_otp(data: dict, db: Session = Depends(get_db)):

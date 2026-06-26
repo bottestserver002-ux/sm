@@ -11,6 +11,7 @@ class User(Base):
     password = Column(String)
 
     is_admin = Column(Boolean, default=False)
+    is_family = Column(Boolean, default=False)
 
 
 class Poem(Base):
