@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import FoodItem
 import resend
+import cloudinary
+import cloudinary.uploader
 import os
 
 router = APIRouter()
@@ -124,3 +126,19 @@ def order_food(data: dict):
             status_code=500,
             detail=f"Lỗi gửi order: {str(e)}"
         )
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=True
+)
+
+@router.get("/test-cloudinary")
+def test_cloudinary():
+
+    result = cloudinary.uploader.upload(
+        "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+        folder="booking_food"
+    )
+
+    return result["secure_url"]
