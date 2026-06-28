@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import User
 import cloudinary.uploader
+from datetime import datetime
 
 router = APIRouter(prefix="/profile", tags=["Profile"])
 
@@ -39,8 +40,13 @@ async def update_profile(
     if not user:
         raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
 
+
+
     if birthday:
-        user.birthday = birthday
+       user.birthday = datetime.strptime(
+           birthday,
+           "%Y-%m-%d"
+            ).date()
 
     user.job = job
     user.gender = gender
