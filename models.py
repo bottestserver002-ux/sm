@@ -13,6 +13,10 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     is_family = Column(Boolean, default=False)
 
+    avatar = Column(Text, nullable=True)
+    birthday = Column(Date, nullable=True)
+    job = Column(String, nullable=True)
+    gender = Column(String, nullable=True)
 
 class Poem(Base):
     __tablename__ = "poems"

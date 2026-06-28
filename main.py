@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 
 from database import Base, engine
 
+from routers.profile_router import router as profile_router
 from routers.food_router import router as food_router
 from routers.auth_router import router as auth_router
 from routers.poems_router import router as poems_router
@@ -46,3 +47,4 @@ app.include_router(posts_router)
 app.include_router(ai_router)
 app.include_router(minigame_router)
 app.include_router(food_router)
+app.include_router(profile_router)

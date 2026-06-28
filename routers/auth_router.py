@@ -10,7 +10,6 @@ import os
 from models import User, OTPCode
 
 from database import get_db
-from models import User
 from auth import hash_password, verify_password, create_access_token
 import resend
 
@@ -87,10 +86,15 @@ def login(data: LoginSchema, db: Session = Depends(get_db)):
     return {
         "token": token,
         "user": {
+            "id": user.id,
             "username": user.username,
             "email": user.email,
             "is_admin": user.is_admin,
-            "is_family": user.is_family
+            "is_family": user.is_family,
+            "avatar": user.avatar,
+            "birthday": str(user.birthday) if user.birthday else "",
+            "job": user.job or "",
+            "gender": user.gender or ""
         }
     }
 @router.get("/make-admin")
