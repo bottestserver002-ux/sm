@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Date
+from sqlalchemy.sql import func
 from database import Base
 
 
@@ -80,3 +81,15 @@ class FoodItem(Base):
     name = Column(String, nullable=False)
     category = Column(String, nullable=False)
     image = Column(String, nullable=True)
+
+class SiteVisit(Base):
+    __tablename__ = "site_visits"
+
+    id = Column(Integer, primary_key=True, index=True)
+    ip = Column(String, nullable=True)
+    user_agent = Column(Text, nullable=True)
+
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
