@@ -5,13 +5,50 @@ import google.generativeai as genai
 
 router = APIRouter()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+API_KEYS = [
+    os.getenv("GEMINI_API_KEY_1"),
+    os.getenv("GEMINI_API_KEY_2"),
+    os.getenv("GEMINI_API_KEY_3"),
+]
 
-genai.configure(
-    api_key=GEMINI_API_KEY
-)
+API_KEYS = [x for x in API_KEYS if x]
 
-model = genai.GenerativeModel("gemini-2.5-flash")
+
+def generate_content(prompt):
+
+    last_error = None
+
+    for key in API_KEYS:
+
+        try:
+
+            genai.configure(api_key=key)
+
+            model = genai.GenerativeModel(
+                "gemini-2.5-flash"
+            )
+
+            response = model.generate_content(
+                prompt
+            )
+
+            return response.text
+
+        except Exception as e:
+
+            last_error = e
+
+            print(f"KEY ERROR: {key[:10]}...")
+
+            continue
+
+    raise Exception(
+        f"Tất cả API đều lỗi: {last_error}"
+    )
+
+
+def ask_ai(message):
+    return generate_content(message)
 
 
 @router.post("/ask-ai")
@@ -93,8 +130,8 @@ Yêu cầu:
 """
 
     try:
-        response = model.generate_content(prompt)
-        return {"result": response.text}
+        result = generate_content(prompt)
+        return {"result": result}
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -119,25 +156,25 @@ def generate_post(data: dict):
     # THÊM ĐOẠN NÀY Ở ĐÂY
     # ==========================
     length_rule = """
-- Rất ngắn: 80–150 từ.
-- Ngắn: 150–300 từ.
-- Trung bình: 300–600 từ.
-- Dài: 600–1000 từ.
-- SEO: 1000–1500 từ.
+- Rất ngắn: 80-150 từ.
+- Ngắn: 150-300 từ.
+- Trung bình: 300-600 từ.
+- Dài: 600-1000 từ.
+- SEO: 1000-1500 từ.
 """
 
     if post_length == "Tự động":
 
         if platform == "TikTok":
             length_rule = """
-Viết khoảng 80–120 từ.
+Viết khoảng 80-120 từ.
 Ưu tiên hook mạnh, ngắn gọn,
 dễ đọc trên điện thoại.
 """
 
         elif platform == "Instagram":
             length_rule = """
-Viết khoảng 150–250 từ.
+Viết khoảng 150-250 từ.
 Ưu tiên cảm xúc,
 storytelling nhẹ,
 dễ kết hợp carousel.
@@ -145,14 +182,14 @@ dễ kết hợp carousel.
 
         elif platform == "Facebook":
             length_rule = """
-Viết khoảng 250–500 từ.
+Viết khoảng 250-500 từ.
 Ưu tiên tương tác,
 bình luận và chia sẻ.
 """
 
         elif platform == "Website":
             length_rule = """
-Viết khoảng 1000–1500 từ.
+Viết khoảng 1000-1500 từ.
 Chuẩn SEO,
 có heading,
 từ khóa tự nhiên.
@@ -227,8 +264,255 @@ Mỗi ảnh phải có:
 """
 
     try:
-        response = model.generate_content(prompt)
-        return {"result": response.text}
+        result = generate_content(prompt)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Lỗi Gemini: {str(e)}"
+        )
+
+@router.post("/generate-blog")
+def generate_blog(data: dict):
+
+    main_subject = data.get(
+        "main_subject", ""
+    )
+
+    selected_idea_number = data.get(
+        "selected_idea_number", ""
+    )
+
+    ideas_text = data.get(
+        "ideas_text", ""
+    )
+
+    tone = data.get(
+        "tone",
+        "Thân thiện"
+    )
+
+    length = data.get(
+        "length",
+        "Dài"
+    )
+
+    prompt = f"""
+Bạn là chuyên gia SEO Content Việt Nam năm 2026.
+
+CHỦ ĐỀ GỐC:
+{main_subject}
+
+CHỦ ĐỀ ĐƯỢC CHỌN:
+{selected_idea_number}
+
+DANH SÁCH 20 Ý TƯỞNG:
+{ideas_text}
+
+VĂN PHONG:
+{tone}
+
+ĐỘ DÀI:
+{length}
+
+Hãy tạo:
+
+# 1. Tiêu đề SEO
+
+Đưa ra 3 tiêu đề khác nhau.
+
+Mỗi tiêu đề:
+- Tối đa 60 ký tự.
+- Thu hút click.
+- Chuẩn SEO.
+
+# 2. Meta Description
+
+- 140-160 ký tự.
+- Chứa từ khóa chính.
+
+# 3. URL Slug
+
+Ví dụ:
+
+khoa-dao-tao-hlv-yoga-200h-can-tho
+
+# 4. Từ khóa chính
+
+# 5. 10 từ khóa phụ
+
+# 6. Search Intent
+
+Phân loại:
+
+- Informational
+- Commercial
+- Transactional
+- Navigational
+
+Giải thích lý do.
+
+# 7. Internal Link gợi ý
+
+Đề xuất 5 bài viết liên quan.
+
+Ví dụ:
+
+- Lợi ích của Yoga đối với dân văn phòng
+- Hành trình trở thành HLV Yoga chuyên nghiệp
+- ...
+
+# 8. External Link gợi ý
+
+Đề xuất nguồn uy tín:
+
+- Yoga Alliance
+- Bộ Y tế
+- WHO
+- ...
+
+# 9. Outline bài viết
+
+H1:
+
+H2:
+
+H3:
+
+Phải logic và chuẩn SEO.
+
+# 10. Bài viết hoàn chỉnh
+
+Yêu cầu:
+
+- 1200-1800 từ.
+- Có mở bài.
+- Có H2.
+- Có H3.
+- Có bullet points.
+- Có CTA cuối bài.
+- Không viết kiểu AI.
+- Văn phong tự nhiên.
+- Tối ưu SEO 2026.
+
+# 11. FAQ
+
+Viết 5 câu hỏi thường gặp.
+
+Ví dụ:
+
+Q: Học HLV Yoga 200H mất bao lâu?
+
+A: ...
+
+# 12. FAQ Schema JSON-LD
+
+Sinh JSON-LD chuẩn.
+
+# 13. Gợi ý hình ảnh
+
+Cho 5 ảnh.
+
+Mỗi ảnh:
+
+- Nội dung ảnh.
+- Góc chụp.
+- Tone màu.
+- Text overlay.
+
+# 14. CTA cuối bài
+
+Viết 3 CTA khác nhau:
+
+- Mềm mại
+- Bán hàng
+- Xây thương hiệu
+
+Toàn bộ phải viết bằng tiếng Việt tự nhiên.
+
+Không dùng quá nhiều dấu # hoặc ***.
+
+Markdown sạch, đẹp, dễ đọc.
+"""
+
+    try:
+        result = generate_content(prompt)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Lỗi Gemini: {str(e)}"
+    )
+
+@router.post("/generate-tiktok")
+def generate_tiktok(data: dict):
+
+    main_subject = data.get(
+        "main_subject", ""
+    )
+
+    selected_idea_number = data.get(
+        "selected_idea_number", ""
+    )
+
+    ideas_text = data.get(
+        "ideas_text", ""
+    )
+
+    tone = data.get(
+        "tone",
+        "Thân thiện"
+    )
+
+    prompt = f"""
+Bạn là chuyên gia TikTok Marketing Việt Nam.
+
+CHỦ ĐỀ GỐC:
+{main_subject}
+
+CHỦ ĐỀ ĐƯỢC CHỌN:
+{selected_idea_number}
+
+DANH SÁCH Ý TƯỞNG:
+{ideas_text}
+
+VĂN PHONG:
+{tone}
+
+Hãy tạo:
+
+# 1. Hook mở đầu (3 giây đầu)
+
+# 2. Kịch bản video 15-30 giây
+
+Cảnh 1:
+...
+
+Cảnh 2:
+...
+
+# 3. Caption TikTok
+
+80-120 từ.
+
+# 4. Text overlay từng cảnh
+
+# 5. Hiệu ứng chuyển cảnh
+
+# 6. Nhạc nền phù hợp
+
+# 7. Hashtag
+
+# 8. CTA cuối video
+
+Viết thật tự nhiên,
+ưu tiên viral,
+không viết kiểu AI.
+"""
+
+    try:
+        result = generate_content(prompt)
+        return {"result": result}
     except Exception as e:
         raise HTTPException(
             status_code=500,
