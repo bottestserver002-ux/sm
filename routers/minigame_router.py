@@ -6,16 +6,24 @@ from fastapi import (
     Form
 )
 
-import shutil
-import uuid
 from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Question
 
 import random
+import cloudinary
+import cloudinary.uploader
+import os
 
 router = APIRouter()
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=True
+)
 
 
 # =========================
@@ -68,37 +76,37 @@ def add_question(
     db: Session = Depends(get_db)
 ):
 
-    filename = (
-        str(uuid.uuid4())
-        + image.filename
-    )
+    try:
 
-    filepath = f"uploads/{filename}"
-
-    with open(filepath, "wb") as buffer:
-
-        shutil.copyfileobj(
-            image.file,
-            buffer
+        # Upload Cloudinary
+        result = cloudinary.uploader.upload(
+        image.file,
+        folder="minigame",
+        width=800,
+        crop="limit",
+        quality="auto",
+        fetch_format="auto"
         )
 
-    image_url = (
-        f"https://sm-backend-hbpp.onrender.com/uploads/{filename}"
-    )
+        image_url = result["secure_url"]
 
-    new_question = Question(
-        image=image_url,
-        answer=answer
-    )
+        new_question = Question(
+            image=image_url,
+            answer=answer
+        )
 
-    db.add(new_question)
+        db.add(new_question)
+        db.commit()
 
-    db.commit()
+        return {
+            "message": "Thêm thành công"
+        }
 
-    return {
-        "message": "Thêm thành công"
-    }
+    except Exception as e:
 
+        return {
+            "message": f"Lỗi upload: {str(e)}"
+        }
 
 # =========================
 # DELETE QUESTION
