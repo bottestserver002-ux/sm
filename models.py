@@ -93,3 +93,20 @@ class SiteVisit(Base):
         DateTime(timezone=True),
         server_default=func.now()
     )
+
+class PuzzleLevel(Base):
+    __tablename__ = "puzzle_levels"
+
+    id = Column(Integer, primary_key=True, index=True)
+    level = Column(Integer, unique=True, index=True)
+    image = Column(Text, nullable=False)
+    rows = Column(Integer, nullable=False)
+    cols = Column(Integer, nullable=False)
+
+
+class PuzzleProgress(Base):
+    __tablename__ = "puzzle_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, nullable=False, index=True)
+    level = Column(Integer, nullable=False)
