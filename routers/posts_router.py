@@ -10,7 +10,7 @@ router = APIRouter()
 @router.get("/posts")
 def get_posts(db: Session = Depends(get_db)):
 
-    return db.query(Post).all()
+    return db.query(Post).order_by(Post.id.desc()).all()
 
 
 @router.post("/posts")
