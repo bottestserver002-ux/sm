@@ -110,3 +110,21 @@ class PuzzleProgress(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, nullable=False, index=True)
     level = Column(Integer, nullable=False)
+
+class Workspace(Base):
+    __tablename__ = "workspaces"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    name = Column(String)
+
+    description = Column(Text)
+
+    color = Column(String, default="#2563eb")
+
+    icon = Column(String, default="📁")
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id")
+    )
