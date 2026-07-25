@@ -1,6 +1,9 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Date, ForeignKey
 from sqlalchemy.sql import func
 from database import Base
+from sqlalchemy.orm import relationship
+
+from datetime import datetime
 
 
 class User(Base):
@@ -111,20 +114,226 @@ class PuzzleProgress(Base):
     email = Column(String, nullable=False, index=True)
     level = Column(Integer, nullable=False)
 
-class Workspace(Base):
-    __tablename__ = "workspaces"
+# ==========================================================
+# PLANNING MONTH
+# ==========================================================
+
+class PlanningMonth(Base):
+
+    __tablename__ = "planning_month"
 
     id = Column(Integer, primary_key=True, index=True)
 
-    name = Column(String)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    title = Column(
+        String(255),
+        nullable=False
+    )
+
+    goal = Column(Text)
+
+    note = Column(Text)
+
+    start_date = Column(Date)
+
+    end_date = Column(Date)
+
+    status = Column(
+        String(30),
+        default="Doing"
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    weeks = relationship(
+        "PlanningWeek",
+        back_populates="month",
+        cascade="all, delete"
+    )
+
+
+# ==========================================================
+# PLANNING WEEK
+# ==========================================================
+
+class PlanningWeek(Base):
+
+    __tablename__ = "planning_week"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    month_id = Column(
+        Integer,
+        ForeignKey(
+            "planning_month.id",
+            ondelete="CASCADE"
+        )
+    )
+
+    title = Column(
+        String(150)
+    )
+
+    week_number = Column(
+        Integer
+    )
+
+    goal = Column(Text)
+
+    note = Column(Text)
+
+    status = Column(
+        String(30),
+        default="Doing"
+    )
+
+    month = relationship(
+        "PlanningMonth",
+        back_populates="weeks"
+    )
+
+    days = relationship(
+        "PlanningDay",
+        back_populates="week",
+        cascade="all, delete"
+    )
+
+
+# ==========================================================
+# PLANNING DAY
+# ==========================================================
+
+class PlanningDay(Base):
+
+    __tablename__ = "planning_day"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    week_id = Column(
+        Integer,
+        ForeignKey(
+            "planning_week.id",
+            ondelete="CASCADE"
+        )
+    )
+
+    date = Column(Date)
+
+    title = Column(
+        String(255)
+    )
+
+    goal = Column(Text)
+
+    note = Column(Text)
+
+    status = Column(
+        String(30),
+        default="Doing"
+    )
+
+    week = relationship(
+        "PlanningWeek",
+        back_populates="days"
+    )
+
+    tasks = relationship(
+        "PlanningTask",
+        back_populates="day",
+        cascade="all, delete"
+    )
+
+
+# ==========================================================
+# PLANNING TASK
+# ==========================================================
+
+class PlanningTask(Base):
+
+    __tablename__ = "planning_task"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    day_id = Column(
+        Integer,
+        ForeignKey(
+            "planning_day.id",
+            ondelete="CASCADE"
+        )
+    )
+
+    title = Column(
+        String(255),
+        nullable=False
+    )
 
     description = Column(Text)
 
-    color = Column(String, default="#2563eb")
+    location = Column(
+        String(255)
+    )
 
-    icon = Column(String, default="📁")
+    position = Column(
+        String(255)
+    )
 
-    user_id = Column(
-        Integer,
-        ForeignKey("users.id")
+    partner = Column(
+        String(255)
+    )
+
+    start_time = Column(
+        String(10)
+    )
+
+    end_time = Column(
+        String(10)
+    )
+
+    deadline = Column(DateTime)
+
+    priority = Column(
+        String(20),
+        default="Medium"
+    )
+
+    status = Column(
+        String(20),
+        default="Todo"
+    )
+
+    completed = Column(
+        Boolean,
+        default=False
+    )
+
+    note = Column(Text)
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    day = relationship(
+        "PlanningDay",
+        back_populates="tasks"
     )

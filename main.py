@@ -14,7 +14,7 @@ from routers.posts_router import router as posts_router
 from routers.ai_router import router as ai_router
 from routers.minigame_router import router as minigame_router
 from routers.puzzle_router import router as puzzle_router
-from routers.workspace_router import router as workspace_router
+from routers.planning_router import router as planning_router
 from database import engine
 from models import *
 
@@ -55,4 +55,4 @@ app.include_router(profile_router)
 app.include_router(stats_router)    
 app.include_router(seo_router)
 app.include_router(puzzle_router)
-app.include_router(workspace_router)
+app.include_router(planning_router)
